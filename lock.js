@@ -1,6 +1,7 @@
 var fs = require("fs");
 var when = require("when");
 var pt = require("prompt");
+var lock = require("./lock-lib/lock-basic");
 
 var PATH_ORIGIN = "./file_origin/";
 var PATH_LOCK = "./file_lock/";
@@ -22,46 +23,27 @@ function getFileList(path) {
 	});
 }
 
-function stringToUnicode(buffer) {
-	var result = "";
-	buffer.forEach(function (v) {
-		result += "\\u" + ("000" + v.charCodeAt(0).toString(16)).substr(-4);
-	});
-	return result;
-}
-
-function unicodeToString(buffer) {
-	var result = "";
-	var arr = buffer.split('\\u');
-	arr.forEach(function (v, i) {
-		if (i > 0) {
-			result += String.fromCharCode(parseInt(v, 16));
-		}
-	});
-	return result;
-}
-
-function fileToUnicode(file) {
+function fileLock(file) {
 	return when.promise(function (resolve, reject) {
 		fs.readFile(PATH_ORIGIN + file, 'utf8', function (err, data) {
 			if (err) {
 				reject(err);
 			} else {
 				console.warn(data);
-				resolve(stringToUnicode(data));
+				resolve(lock.lock(data));
 			}
 		});
 	});
 }
 
-function unicodeToFile(file) {
+function fileUnlock(file) {
 	return when.promise(function (resolve, reject) {
 		fs.readFile(PATH_LOCK + file, 'utf8', function (err, data) {
 			if (err) {
 				reject(err);
 			} else {
 				console.warn(data);
-				resolve(unicodeToString(data));
+				resolve(lock.unlock(data));
 			}
 		});
 	});
@@ -109,7 +91,7 @@ function lock() {
 		pt.get(data, function (err, result) {
 			if (err) return;
 			var filename = files[parseInt(result.file, 10) - 1];
-			fileToUnicode(filename).then(function (data) {
+			fileLock(filename).then(function (data) {
 				fileOutput(PATH_LOCK, filename, data).then(function () {
 					console.warn(COMPLETE_LOCK);
 				});
@@ -138,7 +120,7 @@ function unlock() {
 		pt.get(data, function (err, result) {
 			if (err) return;
 			var filename = files[parseInt(result.file, 10) - 1];
-			unicodeToFile(filename).then(function (data) {
+			fileUnlock(filename).then(function (data) {
 				fileOutput(PATH_UNLOCK, filename, data).then(function () {
 					console.warn(COMPLETE_UNLOCK);
 				});
