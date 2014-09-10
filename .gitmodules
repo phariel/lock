@@ -1,0 +1,3 @@
+[submodule "lock-lib"]
+	path = lock-lib
+	url = https://github.com/xkxin/lock-lib.git
