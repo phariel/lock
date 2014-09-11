@@ -1,7 +1,7 @@
 var fs = require("fs");
 var when = require("when");
 var pt = require("prompt");
-var lock = require("./lock-lib/lock-basic");
+var lockMethod = require("./lock-lib/lock-basic");
 
 var PATH_ORIGIN = "./file_origin/";
 var PATH_LOCK = "./file_lock/";
@@ -29,8 +29,7 @@ function fileLock(file) {
 			if (err) {
 				reject(err);
 			} else {
-				console.warn(data);
-				resolve(lock.lock(data));
+				resolve(lockMethod.lock(data));
 			}
 		});
 	});
@@ -42,8 +41,7 @@ function fileUnlock(file) {
 			if (err) {
 				reject(err);
 			} else {
-				console.warn(data);
-				resolve(lock.unlock(data));
+				resolve(lockMethod.unlock(data));
 			}
 		});
 	});
@@ -71,7 +69,7 @@ function fileOutput(path, filename, data) {
 
 }
 
-function lock() {
+function stepLock() {
 	getFileList(PATH_ORIGIN).then(function (files) {
 		var str = "";
 		files.forEach(function (v, i) {
@@ -100,7 +98,7 @@ function lock() {
 	});
 }
 
-function unlock() {
+function stepUnlock() {
 	getFileList(PATH_LOCK).then(function (files) {
 		var str = "";
 		files.forEach(function (v, i) {
@@ -144,10 +142,10 @@ function main() {
 		if (err) return;
 		switch (result.step) {
 			case "1":
-				lock();
+				stepLock();
 				break;
 			case "2":
-				unlock();
+				stepUnlock();
 				break;
 		}
 	});
